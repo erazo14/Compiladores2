@@ -1,0 +1,299 @@
+package compiladores;
+import java_cup.runtime.*;
+import java_cup.runtime.Scanner;
+import java.util.*;
+import java.io.*;
+//import java.swing.JOptionPane;
+
+
+
+/* Preliminaries to set up and use the scanner.  */
+//init with {: scanner.init();              :};
+//scan with {: return super.scanner.next_token(); :};
+scan with {: return super.getScanner().next_token(); :};
+
+parser code{:
+    ArrayList<Visual_Error> erroresSintacticos = new ArrayList<Visual_Error>();
+   @Override
+      	public void syntax_error(Symbol cur_token) {
+        System.out.println("La Cadena: " + cur_token.value +" en la Linea: " + (cur_token.left+1) +", Columna: "+(cur_token.right+1)+ " esta fuera de contexto.");
+        report_error("Syntax error con:"+ cur_token.value + " en la linea: " + (cur_token.left+1) +", columna: " + (cur_token.right+1),null);
+        erroresSintacticos.add(new Visual_Error(cur_token.left + 1, cur_token.right + 1,"La Cadena: " + cur_token.value +" en la Linea: " + (cur_token.left+1) +", Columna: "+(cur_token.right+1)+ " esta fuera de contexto.") );
+    }
+
+
+public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
+ // report_fatal_error(" ", null);
+  //erroresSintacticos.add(new Visual_Error(-1,0,"Error desconocido, se ha detenido la compilación causado por: " +cur_token.value + " en la Linea " + (cur_token.left+1) +", Columna: "+(cur_token.right+1)) );
+   //System.out.println("Error desconocido, se ha detenido la compilación causado por: " +cur_token.value + " en la Linea " + (cur_token.left+1) +", Columna: "+(cur_token.right+1));
+}
+
+:}
+
+action code {:
+
+        Hashtable<String, Simbolos> tabla= new Hashtable<String, Simbolos>(); // tabla de simbolo
+
+        public void insertarSimbolo(String nombre, Simbolos simbolo,int linea,int columna, int amb){
+            String id,id2;
+
+            id= nombre.toString() + "," + String.valueOf(amb);
+            id2 = nombre.toString() + "," + "0";
+
+            if((tabla.get(id)== null)  ){
+
+               if (( tabla.get(id2)== null)  ){
+                    tabla.put(id, simbolo);
+                }
+                else
+                {
+                    E2(linea,columna, "Variable o Metodo ya declarada: " + "' "+ nombre.toUpperCase() + "' "  );
+                }
+            }
+            else{
+                    E2(linea,columna, "Variable o Metodo ya declarada: " + "' "+ nombre.toUpperCase() + "' "  );
+                // System.out.println( "Variable ya declarada");
+
+
+            }
+
+System.out.println("-------------------------------------");
+System.out.println("---------Tabla De Simbolo------------");
+                Enumeration e = tabla.keys();
+                Simbolos s=new Simbolos();
+                String obj;
+                int i = 1;
+                   while (e.hasMoreElements()) {
+                      obj = e.nextElement().toString();
+                      s=tabla.get(obj);
+
+                      System.out.println(i + "   key "+ obj +": "+ s.getTipo() + ",Des:" + s.getDesplazamiento());
+                      i+=1;
+                           }
+System.out.println("-------------------------------------");
+        }
+
+        public void E2(int linea,int columna, String mensaje){
+            System.err.println("Error Semantico [Linea: " + linea + " Columna: " + columna + "] -> " + mensaje ) ;
+            //Main.errorGlobal  = true;
+        }
+
+	ArrayList<Visual_Error> erroresSintacticos2 = new ArrayList<Visual_Error>();
+	public void add_error(Symbol cur_token, String falta){
+		System.out.println("Se esperaba un simbolo de tipo: " + falta + " cerca de la Linea: " + (cur_token.left+1) + ", Columna: "+(cur_token.right+1));
+		erroresSintacticos2.add(new Visual_Error(cur_token.left +1, cur_token.right + 1,"Se esperaba un s�mbolo de tipo: " + falta + "\n cerca de la Linea: " + (cur_token.left+1) + ", Columna: "+(cur_token.right+1)));
+	}
+	public void add_errors(Symbol cur_token, String falta){
+		System.out.println("Se esperaba el simbolo "+ falta + " para el statement de la linea " + (cur_token.left+1));
+		erroresSintacticos2.add(new Visual_Error(cur_token.left+1, cur_token.right+1,"Se esperaba el simbolo "+ falta+ " para el statement de la linea "+ (cur_token.left+1) ));
+	}
+	public void quitar(){
+		erroresSintacticos2.remove(erroresSintacticos2.size());
+	}
+
+:};
+
+
+/*-* terminal symbols */
+//estos son los que no estoy utilizando
+terminal Potencia, DosPuntos;
+
+//estos son los terminales que estoy utilizando
+terminal Suma, Resta, Mult, Div,Return,Structs,EndFor,ExitFor,Private, EndWhile, EndSelect, EndCase;
+terminal As, Dim, Main, ByVal,ByRef,Float,Double,Select,Concatenacion, DiviEntera, GuionBajo, Eqv, Imp, Step,Exit,Case;
+terminal Char, Integer, String, Boolean, Entero, Type, Ch, str, com,SelectCase;
+terminal If, Do, While, For, Then, To, Else, ElseIf, End, EndIf, EndSub, EndFunction, EndType, Loop, Next;
+terminal Sub, Print, Punto, LlaveDer, LlaveIzq;
+terminal ParIzq, ParDer, Input;
+terminal Menor, Mayor, Distinto, MenorIgual, MayorIgual, Not, And, Or, Xor;
+terminal EndLine, Id, Coma, Call;
+terminal Asigna, TipoBoolean, Function;
+
+/*-* Non-non terminal symbols **/
+non terminal  ini, decvarstm, decvar, listdec, tipo, decfunction, functionbody, listparam, parametros, mainstm;
+non terminal functionlist, operadorcomp, escribir, leer, impre, ret, conca;
+non terminal tipos, statementlist, statement, ifstm, elsestm, elselist, elseifstm, condicion, operando, iflist;
+non terminal forstm, dostm, exp, expMat, endtypes, tipotype, final, dec;
+non terminal types, sfunction, ffunction, callfunction, expLog,decvarlist,dectype;
+
+
+
+/* precedence */
+//precedence left Igual;
+precedence left Suma, Resta;
+precedence left Mult, Div;
+precedence left Potencia;
+
+start with ini;
+
+ini ::= EndLine ini |EndLine
+       |dec functionlist mainstm
+       |dec functionlist error
+       |dec mainstm functionlist
+       |dec functionlist mainstm functionlist
+       |dec mainstm;
+ 
+/*-*
+ * GRAMMAR RULES
+ */
+
+conca        ::= str Concatenacion conca|str;
+functionbody ::= statementlist;
+
+functionlist ::= functionlist decfunction|decfunction;
+
+types        ::= Type Id final decvarlist EndType final;
+
+decfunction  ::= error decfunction
+                |Sub sfunction functionbody EndSub final
+                |Sub sfunction EndSub final
+                |ffunction
+                |types
+                ;
+
+escribir    ::= Print impre final;
+
+impre       ::= Id|Id ParIzq listparam ParDer|conca|Ch|Id Punto Id;
+
+leer        ::= Input ParIzq Id ParDer final;
+
+sfunction ::= Id ParIzq listparam ParDer final;
+
+ffunction ::=Function Id ParIzq listparam ParDer As tipo final functionbody ret EndFunction final
+             |Function Id ParIzq listparam ParDer final functionbody ret EndFunction final
+             |Function Id ParIzq listparam ParDer final ret EndFunction final
+             |Function Id ParIzq listparam ParDer As tipo final ret EndFunction final;
+//             |Function Id ParIzq listparam ParDer final functionbody ret error;
+
+ret     ::= Return TipoBoolean final |Return conca final |Return Ch final|Return exp|;
+
+callfunction ::= Call sfunction|sfunction;
+
+decvarstm             ::= Dim listdec final
+                       |Dim listdec Asigna Entero final;
+
+decvarlist          ::= dectype final decvarlist|;
+
+dectype             ::= Id:id As tipo:tp {:System.out.println(tp); :}
+                    |Id As Id;
+
+listdec            ::= decvar
+                       |listdec Coma decvar ;
+
+statementlist           ::= statement
+                           |statement statementlist
+                            ;
+
+dec             ::= decvarstm dec | ;
+
+statement            ::=error statement
+                        |decvarstm
+                        |iflist
+                        |forstm
+                        |dostm
+                        |tipotype
+                        |escribir
+                        |leer
+                        |expMat
+                        |callfunction;
+
+tipotype    ::= Id Punto Id final;
+
+decvar             ::= Id:id As tipo:tp {:  Simbolos s = new Simbolos(id.toString(), tp.toString(), 0);
+                                            insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),0); :}
+                      |Id As Id|error{:add_errors((java_cup.runtime.Symbol)CUP$Analizador$stack.peek(), "Id As Tipo");:};
+                  
+iflist              ::=ifstm statementlist elselist EndIf final
+                        |ifstm elselist EndIf final;
+
+ifstm              ::= If expLog Then final;
+
+elselist           ::=  elsestm
+                       |elseifstm 
+                       | ;
+
+elsestm            ::= Else final statementlist |Else final ;
+                      
+elseifstm          ::=  ElseIf expLog Then final statementlist elselist|ElseIf expLog Then final elselist ;
+
+forstm  ::= For Id Asigna  Entero To Entero final statementlist Next Id final|For Id Asigna  Entero To Entero final Next Id final;
+
+dostm            ::= Do While expLog final statementlist Loop final
+                    |Do expLog final statementlist Loop While final
+                    |Do While expLog final Loop final
+                    |Do expLog final Loop While final;
+
+final   ::= EndLine|;
+
+mainstm             ::= Sub Main ParIzq error ParDer final  functionbody EndSub final
+                        |Sub Main ParIzq ParDer final  functionbody EndSub final|Sub Main ParIzq ParDer final EndSub final;
+
+tipo               ::= Char:c    {:RESULT=c.toString(); :}
+                       |Integer:i{:RESULT=i.toString(); :}
+                       |String:s {:RESULT=s.toString(); :}
+                       |Boolean:b{:RESULT=b.toString(); :};
+
+
+listparam           ::=  listparam Coma parametros
+                        |parametros
+                        | ;
+
+
+parametros          ::= ByVal decvar
+                        |ByRef decvar
+                        |decvar
+                        |operando
+                        |Id ParIzq listparam ParDer;
+
+tipos             ::=  Entero
+                       |TipoBoolean
+                       |Ch
+                       |conca
+                        ;
+
+
+condicion       ::= operando operadorcomp operando;
+
+
+operando        ::= Id
+                   |tipos;
+
+operadorcomp          ::= Mayor
+                         |Menor
+                         |MayorIgual
+                         |MenorIgual
+                         |Distinto
+                         |Asigna;
+
+expLog     ::= condicion
+            |Not ParIzq expLog ParDer
+            |Not ParIzq expLog ParDer Or expLog
+            |Not ParIzq expLog ParDer Xor expLog
+            |Not ParIzq expLog ParDer And expLog
+            |condicion Or expLog
+            |condicion Xor expLog
+            |condicion And expLog
+            |ParIzq expLog ParDer
+            |ParIzq expLog ParDer Or expLog
+            |ParIzq expLog ParDer Xor expLog
+            |ParIzq expLog ParDer And expLog
+            ;
+
+expMat  ::= Id Asigna exp final
+            |Id Asigna TipoBoolean final
+            |Id Asigna conca final
+            |Id Punto Id Asigna exp final
+            |Id Punto Id Asigna TipoBoolean final
+            |Id Punto Id Asigna conca final;
+
+exp     ::= Entero
+            |Id
+            |Id Punto Id
+            |Id ParIzq listparam ParDer
+            |exp Suma exp
+            |exp Resta exp
+            |exp Mult exp
+            |exp Div exp
+            |exp Potencia exp
+            |ParIzq exp ParDer
+            ;
