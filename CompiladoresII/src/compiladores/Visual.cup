@@ -33,6 +33,8 @@ public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exceptio
 action code {:
 
         Hashtable<String, Simbolos> tabla= new Hashtable<String, Simbolos>(); // tabla de simbolo
+        Hashtable<String, String> Record = new Hashtable<String, String>();
+        String ProcedimietnoActual="";
 
         public void insertarSimbolo(String nombre, Simbolos simbolo,int linea,int columna, int amb){
             String id,id2;
@@ -67,7 +69,7 @@ System.out.println("---------Tabla De Simbolo------------");
                       obj = e.nextElement().toString();
                       s=tabla.get(obj);
 
-                      System.out.println(i + "   key "+ obj +": "+ s.getTipo() + ",Des:" + s.getDesplazamiento());
+                      System.out.println(i + "   key "+ obj +": "+ s.getTipo() + ",Des:" + s.getDesplazamiento()+s.getTipoDeDeclaracion());
                       i+=1;
                            }
 System.out.println("-------------------------------------");
@@ -142,7 +144,14 @@ functionbody ::= statementlist;
 
 functionlist ::= functionlist decfunction|decfunction;
 
-types        ::= Type Id final decvarlist EndType final;
+types        ::= Type Id final decvarlist EndType final{:
+                                                        :};
+
+decvarlist          ::= dectype:dtp final decvarlist:dl{:if(dl.toString()==""){RESULT=dtp.toString();;}else{
+                                                         RESULT=dtp.toString()+"X"+dl.toString();}:}|{:RESULT="";:};
+
+dectype             ::= Id:id As tipo:tp {:RESULT=id.toString() + "x" +tp.toString(); :}
+                    |Id As Id;
 
 decfunction  ::= error decfunction
                 |Sub sfunction functionbody EndSub final
@@ -172,13 +181,21 @@ callfunction ::= Call sfunction|sfunction;
 decvarstm             ::= Dim listdec final
                        |Dim listdec Asigna Entero final;
 
-decvarlist          ::= dectype final decvarlist|;
-
-dectype             ::= Id:id As tipo:tp {:System.out.println(tp); :}
-                    |Id As Id;
-
 listdec            ::= decvar
-                       |listdec Coma decvar ;
+                       |decvar Coma listdec
+                       |Id:id Coma listdec {: if(ProcedimietnoActual == ""){
+                                             Simbolos s = new Simbolos(id.toString(), "variant", 0);
+                                            insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),0);
+                                            s.setTipoDeDeclaracion("Declaracion de variable Variant");
+                                            }
+                                            else{Simbolos s = new Simbolos(id.toString(), "variant", 0);
+                                            insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),      /*pendiente*/   0);
+                                            s.setTipoDeDeclaracion("Declaracion de variable Variant");
+                                            } :}
+                       |Id:id {:  Simbolos s = new Simbolos(id.toString(), "variant", 0);
+                                insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),0);
+                                s.setTipoDeDeclaracion("Declaracion de variable Variant");
+                                :};
 
 statementlist           ::= statement
                            |statement statementlist
@@ -200,7 +217,8 @@ statement            ::=error statement
 tipotype    ::= Id Punto Id final;
 
 decvar             ::= Id:id As tipo:tp {:  Simbolos s = new Simbolos(id.toString(), tp.toString(), 0);
-                                            insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),0); :}
+                                            insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),0);
+                                            s.setTipoDeDeclaracion("Declaracion de variable Primitiva"); :}
                       |Id As Id|error{:add_errors((java_cup.runtime.Symbol)CUP$Analizador$stack.peek(), "Id As Tipo");:};
                   
 iflist              ::=ifstm statementlist elselist EndIf final
