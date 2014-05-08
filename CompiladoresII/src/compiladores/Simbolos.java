@@ -23,6 +23,7 @@ public class Simbolos implements java.io.Serializable{
     private Type type = new Type();
     private int desplaza = 0;
     private String tipoDeDeclaracion = "";
+    private int ambito;
  
 
     public String getTipoDeDeclaracion() {
@@ -153,6 +154,10 @@ public class Simbolos implements java.io.Serializable{
     @Override
     public String toString() {
         return super.toString();
+    }
+
+    void setAmbito(int ambito) {
+        this.ambito = ambito;
     }
   
 }

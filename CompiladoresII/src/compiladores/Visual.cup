@@ -144,8 +144,17 @@ functionbody ::= statementlist;
 
 functionlist ::= functionlist decfunction|decfunction;
 
-types        ::= Type Id final decvarlist EndType final{:
-                                                        :};
+types        ::= Type Id:id final decvarlist:dtp EndType final{:if(Record.get(id.toString()) == null){
+                                                                Record.put(id.toString(),dtp.toString());
+                                                                  for(String k : Record.keySet()){
+                                                                        String elemento = Record.get(k);
+                                                                        System.out.println("ID:" + k + " valor: " + elemento );
+                                                                    }
+                                                                }else{
+                                                                    E2(dtpleft + 1,dtpright + 1, "Variable o Metodo ya declarada: " + "' "+ id.toString().toUpperCase() + "' "  );
+                                                                }
+
+                                                                :};
 
 decvarlist          ::= dectype:dtp final decvarlist:dl{:if(dl.toString()==""){RESULT=dtp.toString();;}else{
                                                          RESULT=dtp.toString()+"X"+dl.toString();}:}|{:RESULT="";:};
