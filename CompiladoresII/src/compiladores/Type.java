@@ -14,11 +14,17 @@ public class Type {
     public int desplaza = 0;
     ArrayList listaDeInstancias = new ArrayList();
     ArrayList <TipoParametro> listaDeParametros= new ArrayList();
+    private final String nombre;
 
     public Type() {
         this.id = "";
+        this.nombre ="";
         listaDeParametros = new ArrayList();
         tamano  = 0;
+    }
+
+    public Type(String id){
+        this.nombre = id;
     }
     
     
