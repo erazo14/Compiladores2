@@ -16,6 +16,7 @@ public class Simbolos implements java.io.Serializable{
     private String id;
     private int valor;
     private String tipo;
+    private int ambito;
     private Hashtable <String, String> record= new Hashtable();
     private int direccion;
     private String returnFunction  = "";
@@ -23,7 +24,7 @@ public class Simbolos implements java.io.Serializable{
     private Type type = new Type();
     private int desplaza = 0;
     private String tipoDeDeclaracion = "";
-    private int ambito;
+    
  
 
     public String getTipoDeDeclaracion() {
@@ -37,10 +38,10 @@ public class Simbolos implements java.io.Serializable{
     public int getDesplazamiento() {
         return desplaza;
     }
-
-    public void setDesplazamiento(int despazamiento) {
+ public void setDesplazamiento(int despazamiento) {
         this.desplaza = despazamiento;
     }
+   
  
     public Type getType() {
         return type;
@@ -81,6 +82,7 @@ public class Simbolos implements java.io.Serializable{
         this.id = id;
         this.valor = 0;
         this.tipo=tipo;
+        this.ambito = ambito;
         this.record= tabla; 
         this.direccion=0;
     }
@@ -88,6 +90,7 @@ public class Simbolos implements java.io.Serializable{
         this.id = id;
         this.valor = 0;
         this.tipo=tipo;
+        this.ambito = ambito;
         this.direccion=0;
     }
      
@@ -95,6 +98,7 @@ public class Simbolos implements java.io.Serializable{
     {   this.id = id;
         this.valor = valor;
         this.tipo=tipo;
+        this.ambito = ambito;
         this.direccion=direccion;
     }
     
@@ -133,15 +137,23 @@ public class Simbolos implements java.io.Serializable{
     {
         this.valor = valor;
     }
-    public String getTipo()
+    public String getTipos()
     {
         return this.tipo;
     }
-    public void setTipo(String tipo)
+    public void setTipos(String tipo)
     {
         this.tipo = tipo;
     }
-  
+   public int getAmbito()
+    {
+        return this.ambito;
+    }
+    public void setAmbito(int ambito)
+    {
+        this.ambito = ambito;
+    }
+
      public int getDireccion()
     {
         return this.direccion;
@@ -156,8 +168,5 @@ public class Simbolos implements java.io.Serializable{
         return super.toString();
     }
 
-    void setAmbito(int ambito) {
-        this.ambito = ambito;
-    }
-  
+    
 }
