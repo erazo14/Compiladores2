@@ -1,3 +1,4 @@
+
 function hola() 
 For s = 1 To 4
   Call hola()
@@ -26,5 +27,7 @@ End Sub
 Function Hola() As Integer
 Dim a As String,a As Boolean,b As Char
 Dim b As Integer = 5147523
+a = 5
 Return "hola" & ""
+return a
 End Function

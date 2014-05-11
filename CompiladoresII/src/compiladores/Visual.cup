@@ -123,8 +123,8 @@ terminal Asigna, TipoBoolean, Function;
 non terminal  ini, decvarstm, decvar, listdec, tipo, decfunction, functionbody, listparam, parametros, mainstm;
 non terminal functionlist, operadorcomp, escribir, leer, impre, ret, conca;
 non terminal tipos, statementlist, statement, ifstm, elsestm, elselist, elseifstm, condicion, operando, iflist;
-non terminal forstm, dostm, exp, expMat, endtypes, tipotype, final, dec;
-non terminal types, sfunction, ffunction, callfunction, expLog,decvarlist,dectype;
+non terminal forstm, dostm, exp, expMat, endtypes, tipotype, final, dec, argumentos, listarg, decvarparam;
+non terminal types, sfunction, ffunction, callfunction, expLog,decvarlist,dectype, sfunctioncall;
 
 
 
@@ -216,6 +216,9 @@ leer        ::= Input ParIzq Id ParDer final;
 
 sfunction ::= Id ParIzq listparam ParDer final;
 
+sfunctioncall ::= Id ParIzq listarg ParDer final;
+
+
 ffunction ::=Function Id ParIzq listparam ParDer As tipo final functionbody ret EndFunction final
              |Function Id ParIzq listparam ParDer final functionbody ret EndFunction final
              |Function Id ParIzq listparam ParDer final ret EndFunction final
@@ -264,6 +267,11 @@ statement            ::=error statement
 
 tipotype    ::= Id Punto Id final;
 
+
+decvarparam  ::= Id As tipo
+                 |Id As Id
+                 |error{:add_errors((java_cup.runtime.Symbol)CUP$Analizador$stack.peek(), "Id As Tipo");:};
+
 decvar             ::= Id:id As tipo:tp {:  Simbolos s = new Simbolos(id.toString(), tp.toString(), 0);
                                             insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),0);
                                             s.setTipoDeDeclaracion("Declaracion de variable Primitiva"); :}
@@ -304,10 +312,17 @@ listparam           ::=  listparam Coma parametros
                         |parametros
                         | ;
 
+listarg    ::= listarg Coma argumentos
+               |argumentos
+               | ;
+argumentos ::= tipos
+               |Id
+               |operando
+               |Id ParIzq listarg ParDer;
 
-parametros          ::= ByVal decvar
-                        |ByRef decvar
-                        |decvar
+parametros          ::= ByVal decvarparam
+                        |ByRef decvarparam
+                        |decvarparam
                         |operando
                         |Id ParIzq listparam ParDer;
 
