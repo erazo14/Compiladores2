@@ -37,6 +37,61 @@ action code {:
         ArrayList<Type> types = new ArrayList<Type>();
         Type nuevo = new Type();
         String ProcedimietnoActual="";
+        int ambito;
+
+
+public void imprimirtablaDeSimbolo(){
+        System.out.println("-------------------------------------");
+        System.out.println("---------Tabla De Simbolo 3----------");
+        Enumeration e = tabla.keys();  
+        Simbolos s=new Simbolos(); 
+        String obj;
+        while (e.hasMoreElements()) {  
+                obj = e.nextElement().toString();  
+                s=tabla.get(obj);
+                System.out.println(" key "+ obj +": "+ s.getTipos() + ", "+ s.getAmbito());  
+        }    
+        System.out.println("-------------------------------------");
+}
+
+
+
+
+public String getTipos(String nombre, int ambito,int linea,int columna){
+String id
+String id2
+String n="";
+id2 = nombre.toString() + "," + "0";
+id= nombre.toString() + "," + String.valueOf(amb);
+
+try{
+
+    Simbolos sim = new Simbolos();
+     if ((Simbolos)tabla.get(id) != null) {
+         sim= (Simbolos)tabla.get(id);
+         n= sim.getTipos().toString();
+     }
+     else
+     {
+            if ((Simbolos)tabla.get(id2) != null){
+                sim= (Simbolos)tabla.get(id2);
+                n= sim.getTipos().toString();
+            }
+            else{
+                n="integer" ;  /// ojo ver que retornamos
+                System.out.println( "ERROR Variable no declarada ------------------ " + nombre);
+                E2(linea,columna, "Variable no declarada: " + nombre  ); 
+            }
+            
+      }
+    
+}catch(Exception e){
+    n="integer" ;
+    System.out.println( "ERROR HASH " );
+
+}
+    return n;
+}
 
         public void insertarSimbolo(String nombre, Simbolos simbolo,int linea,int columna, int amb){
             String id,id2;
@@ -290,7 +345,8 @@ elsestm            ::= Else final statementlist |Else final ;
                       
 elseifstm          ::=  ElseIf expLog Then final statementlist elselist|ElseIf expLog Then final elselist ;
 
-forstm  ::= For Id Asigna  Entero To Entero final statementlist Next Id final|For Id Asigna  Entero To Entero final Next Id final;
+forstm  ::= For Id Asigna  Entero To Entero final statementlist Next Id final
+           |For Id Asigna  Entero To Entero final Next Id final;
 
 dostm            ::= Do While expLog final statementlist Loop final
                     |Do expLog final statementlist Loop While final
