@@ -13,6 +13,7 @@ public class Type {
     public int tamano;
     public int desplaza = 0;
     ArrayList listaDeInstancias = new ArrayList();
+    ArrayList tipoDeInstancias = new ArrayList();
     ArrayList <TipoParametro> listaDeParametros= new ArrayList();
     private final String nombre;
 

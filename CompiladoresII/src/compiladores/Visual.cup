@@ -36,8 +36,9 @@ action code {:
         Hashtable<String, String> Record = new Hashtable<String, String>();
         ArrayList<Type> types = new ArrayList<Type>();
         Type nuevo = new Type();
+        Procedimiento proc = new Procedimiento();
         String ProcedimietnoActual="";
-        int ambito;
+        int ambitoactual = 0;
 
 //---------------------metodo tipos-------------------------
 public String getTipos(String id, int ambito,int linea,int columna){
@@ -111,7 +112,7 @@ System.out.println("---------Tabla De Simbolo------------");
                       obj = e.nextElement().toString();
                       s=tabla.get(obj);
 
-                      System.out.println(i + "   key "+ obj +": "+ s.getTipos() + ",Des:" + s.getDesplazamiento()+s.getTipoDeDeclaracion());
+                      System.out.println(i + "   key "+ obj +": "+ s.getTipos() +s.getTipoDeDeclaracion());
                       i+=1;
                            }
 System.out.println("-------------------------------------");
@@ -164,7 +165,7 @@ non terminal  ini, decvarstm, decvar, listdec, tipo, decfunction, functionbody, 
 non terminal functionlist, operadorcomp, escribir, leer, impre, ret, conca;
 non terminal tipos, statementlist, statement, ifstm, elsestm, elselist, elseifstm, condicion, operando, iflist;
 non terminal forstm, dostm, exp, expMat, endtypes, tipotype, final, dec, argumentos, listarg, decvarparam;
-non terminal types, sfunction, ffunction, callfunction, expLog,decvarlist,dectype, sfunctioncall;
+non terminal types, sfunction, ffunction, callfunction, expLog,decvarlist,dectype, sfunctioncall,func;
 
 
 
@@ -201,6 +202,7 @@ types        ::= Type Id:id final decvarlist:dtp EndType final{:if(Record.get(id
                                                                         System.out.println("ID:" + k + " valor: " + elemento );
                                                                         for (int i = 0; i < types.get(j).listaDeInstancias.size(); i++) {
                                                                             System.out.println(types.get(j).listaDeInstancias.get(i));
+                                                                            System.out.println(types.get(j).tipoDeInstancias.get(i));
                                                                         }
                                                                         j++;
                                                                     }
@@ -222,7 +224,8 @@ dectype             ::= Id:id As tipo:tp {: boolean esta = false;
                                             }
                                             if (esta == false) {
                                                 nuevo.listaDeInstancias.add(id);
-                                            }else{E2(idleft + 1,idright + 1, "Variable del type ya declarada: " + "' "+ id.toString().toUpperCase() + "' "  );}
+                                                nuevo.tipoDeInstancias.add(tp);
+                                            }else{E2(idleft + 1,idright + 1, "Variable de la instancia ya declarada: " + "' "+ id.toString().toUpperCase() + "' "  );}
                                             RESULT=id.toString() + "x" +tp.toString(); :}
                     |Id:id As Id:id1{: boolean esta = false,existe=false;
                                        for(int i = 0;i<types.size();i++){
@@ -237,6 +240,7 @@ dectype             ::= Id:id As tipo:tp {: boolean esta = false;
                                        }
                                        if (esta == false) {
                                            nuevo.listaDeInstancias.add(id);
+                                           nuevo.tipoDeInstancias.add(id1);
                                        }else{E2(idleft + 1,idright + 1, "Variable del type ya declarada: " + "' "+ id.toString().toUpperCase() + "' "  );}
 
                                         RESULT= id+"xRecord("+Record.get(id1)+")" ;}else{E2(id1left + 1,id1right + 1, "Type no ha sido declarado: " + "' "+ id1.toString().toUpperCase() + "' "  );}:};
@@ -258,12 +262,21 @@ sfunction ::= Id ParIzq listparam ParDer final;
 
 sfunctioncall ::= Id ParIzq listarg ParDer final;
 
+func ::=Function Id:id{:ProcedimietnoActual = "id.toString()";:} ParIzq listparam:param ParDer {:if(ProcedimietnoActual == ""){
+                                                                                                     Simbolos s = new Simbolos(id.toString(), "function", 0);
+                                                                                                     s.setTipoDeDeclaracion("Declaracion de Funcion");
+                                                                                                    insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),0);
+                                                                                                }else{
+                                                                                                    Simbolos s = new Simbolos(id.toString(), "function", ambitoactual);
+                                                                                                    s.setTipoDeDeclaracion("Declaracion de Funcion");
+                                                                                                    insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),ambitoactual);
+                                                                                                }:};
 
-ffunction ::=Function Id ParIzq listparam ParDer As tipo final functionbody ret EndFunction final
-             |Function Id ParIzq listparam ParDer final functionbody ret EndFunction final
-             |Function Id ParIzq listparam ParDer final ret EndFunction final
-             |Function Id ParIzq listparam ParDer As tipo final ret EndFunction final;
-//             |Function Id ParIzq listparam ParDer final functionbody ret error;
+ffunction ::= func As tipo final functionbody ret EndFunction final
+             |func final functionbody EndFunction final
+             |func final EndFunction final
+             |func As tipo final ret EndFunction final;
+//           |Function Id ParIzq listparam ParDer final functionbody ret error;
 
 ret     ::= Return TipoBoolean final |Return conca final |Return Ch final|Return exp|;
 
@@ -276,16 +289,16 @@ listdec            ::= decvar
                        |decvar Coma listdec
                        |Id:id Coma listdec {: if(ProcedimietnoActual == ""){
                                              Simbolos s = new Simbolos(id.toString(), "variant", 0);
+                                             s.setTipoDeDeclaracion("Declaracion de variable Variant");
                                             insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),0);
-                                            s.setTipoDeDeclaracion("Declaracion de variable Variant");
                                             }
-                                            else{Simbolos s = new Simbolos(id.toString(), "variant", 0);
-                                            insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),      /*pendiente*/   0);
+                                            else{Simbolos s = new Simbolos(id.toString(), "variant", ambitoactual);
                                             s.setTipoDeDeclaracion("Declaracion de variable Variant");
+                                            insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),ambitoactual);
                                             } :}
                        |Id:id {:  Simbolos s = new Simbolos(id.toString(), "variant", 0);
-                                insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),0);
                                 s.setTipoDeDeclaracion("Declaracion de variable Variant");
+                                insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),0);
                                 :};
 
 statementlist           ::= statement
@@ -307,15 +320,41 @@ statement            ::=error statement
 
 tipotype    ::= Id Punto Id final;
 
-
-decvarparam  ::= Id As tipo
-                 |Id As Id
-                 |error{:add_errors((java_cup.runtime.Symbol)CUP$Analizador$stack.peek(), "Id As Tipo");:};
-
-decvar             ::= Id:id As tipo:tp {:  Simbolos s = new Simbolos(id.toString(), tp.toString(), 0);
+decvar             ::= Id:id As tipo:tp {:  if (ProcedimietnoActual == ""){
+                                            Simbolos s = new Simbolos(id.toString(), tp.toString(), 0);
+                                            s.setTipoDeDeclaracion("Declaracion de variable Primitiva");
                                             insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),0);
-                                            s.setTipoDeDeclaracion("Declaracion de variable Primitiva"); :}
-                      |Id As Id|error{:add_errors((java_cup.runtime.Symbol)CUP$Analizador$stack.peek(), "Id As Tipo");:};
+                                            }else{
+                                            Simbolos s = new Simbolos(id.toString(), tp.toString(), 0);
+                                            s.setTipoDeDeclaracion("Declaracion de variable Primitiva");
+                                            insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),0);
+                                            } :}
+                      |Id:id As Id:id1{:
+                            boolean declarado = false;
+                            if (ProcedimietnoActual == ""){
+                                for(int i = 0;i< types.size();i++){
+                                    System.out.println();
+                                    if (ExisteType(types.get(i).id.toString(), id1.toString())){
+                                        Simbolos s = new Simbolos(id.toString(), id1.toString(), 0);
+                                        s.setTipoDeDeclaracion("Declaracion de variable Estructural");
+                                        s.setType(types.get(i));
+                                        insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),0);
+                                        declarado = true;
+                                    }
+                                }
+                            }else{
+                                for(int i = 0;i< types.size();i++){
+                                    if (types.get(i).id.toString() == id1.toString()){
+                                        Simbolos s = new Simbolos(id.toString(), id1.toString(), ambitoactual);
+                                        s.setTipoDeDeclaracion("Declaracion de variable Estructural");
+                                        s.setType(types.get(i));
+                                        insertarSimbolo(id.toString(),s,(idleft+1),(idright+1),ambitoactual);
+                                        declarado = true;
+                                    }
+                                }
+                           } if (declarado == false)
+                                    E2(id1left + 1,id1right + 1, "Type no declarado: " + "' "+ id1.toString().toUpperCase() + "' "  );:}
+                      |error{:add_errors((java_cup.runtime.Symbol)CUP$Analizador$stack.peek(), "Id As Tipo");:};
                   
 iflist              ::=ifstm statementlist elselist EndIf final
                         |ifstm elselist EndIf final;
@@ -367,11 +406,14 @@ parametros          ::= ByVal decvarparam
                         |operando
                         |Id ParIzq listparam ParDer;
 
+decvarparam  ::= Id:id As tipo:tp{::}
+                 |Id As Id
+                 |error{:add_errors((java_cup.runtime.Symbol)CUP$Analizador$stack.peek(), "Id As Tipo");:};
+
 tipos             ::=  Entero
                        |TipoBoolean
                        |Ch
-                       |conca
-                        ;
+                       |conca;
 
 
 condicion       ::= operando operadorcomp operando;

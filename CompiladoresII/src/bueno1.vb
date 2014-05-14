@@ -1,4 +1,4 @@
-Dim x As Integer
+Dim d,f,x As Integer
 Dim y As Integer
 Dim z As Integer
 
@@ -8,6 +8,8 @@ t.f = (x.b + y) +  9 + ((9 + 3) + (7+7))
 input (t)
 
 end sub
+
+dim a char
 
 Sub Main()
 Print "hola" _
