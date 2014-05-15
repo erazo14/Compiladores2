@@ -41,40 +41,40 @@ action code {:
         int ambitoactual = 0;
 
 //---------------------metodo tipos-------------------------
-public String getTipos(String id, int ambito,int linea,int columna){
-String id1;
-String id2;
-String id3=" ";
-id2 = id.toString() + "," + "0";
-id1= id.toString() + "," + String.valueOf(ambito);
+public String getTipo(String nombre, int amb,int linea,int columna){
+String id,id2,n="";
+id2 = nombre.toString() + "," + "0";
+id= nombre.toString() + "," + String.valueOf(amb);
 
 try{
-
     Simbolos sim = new Simbolos();
-     if ((Simbolos)tabla.get(id1) != null) {
+     if ((Simbolos)tabla.get(id) != null) {
          sim= (Simbolos)tabla.get(id);
-         id3= sim.getTipos().toString();
+         n= sim.getTipos().toString();
      }
      else
      {
             if ((Simbolos)tabla.get(id2) != null){
                 sim= (Simbolos)tabla.get(id2);
-                id3= sim.getTipos().toString();
+                n= sim.getTipos().toString();
             }
             else{
-                id3="integer" ;  //deberia de retornar un integer
-                System.out.println( "ERROR LA VARIABLE" + id + "NO ESTA DECLARADA ");
-                E2(linea,columna, "Variable no declarada: " + id  ); 
+                n="integer" ;  /// retorna un integer
+                System.out.println( "ERROR Variable no declarada ------------------ " + nombre);
+                E2(linea,columna, "Variable no declarada: " + nombre  );
             }
-            
+
       }
-    
+
+    //System.out.println( "entro -- " + n);
+
 }catch(Exception e){
-    id3="integer" ;
+    n="integer" ;
+    //System.out.println( "noooooooooooooooooooooo-- " + n);
     System.out.println( "ERROR HASH " );
 
 }
-    return id3;
+    return n;
 }
 // -------------- metodo insertar simbolo --------------------
 
@@ -213,8 +213,9 @@ types        ::= Type Id:id final decvarlist:dtp EndType final{:if(Record.get(id
 
                                                                 :};
 
-decvarlist          ::= dectype:dtp final decvarlist:dl{:if(dl.toString()==""){RESULT=dtp.toString();;}else{
-                                                         RESULT=dtp.toString()+"X"+dl.toString();}:}|{:RESULT="";:};
+decvarlist          ::= dectype:dtp final decvarlist:dl{:if(dl.toString()==""){RESULT=dtp.toString();}else{
+                                                         RESULT=dtp.toString()+"X"+dl.toString();}:}
+                       |   {:RESULT="";:};
 
 dectype             ::= Id:id As tipo:tp {: boolean esta = false;
                                             for (int i = 0; i < nuevo.listaDeInstancias.size(); i++) {
@@ -225,11 +226,12 @@ dectype             ::= Id:id As tipo:tp {: boolean esta = false;
                                             if (esta == false) {
                                                 nuevo.listaDeInstancias.add(id);
                                                 nuevo.tipoDeInstancias.add(tp);
+                                                RESULT=id.toString() + "x" +tp.toString();
                                             }else{E2(idleft + 1,idright + 1, "Variable de la instancia ya declarada: " + "' "+ id.toString().toUpperCase() + "' "  );}
-                                            RESULT=id.toString() + "x" +tp.toString(); :}
+                                             :}
                     |Id:id As Id:id1{: boolean esta = false,existe=false;
                                        for(int i = 0;i<types.size();i++){
-                                       if(ExisteType(types.get(i).id.toString(),id1.toString())){existe = true;}
+                                            if(ExisteType(types.get(i).id.toString(),id1.toString())){existe = true;}
                                        }
                                        System.out.println(existe);
                                        if(existe){
@@ -369,8 +371,8 @@ elsestm            ::= Else final statementlist |Else final ;
                       
 elseifstm          ::=  ElseIf expLog Then final statementlist elselist|ElseIf expLog Then final elselist ;
 
-forstm  ::= For Id Asigna  Entero To Entero final statementlist Next Id final
-           |For Id Asigna  Entero To Entero final Next Id final;
+forstm  ::= For Id Asigna  expMat To expMat statementlist Next Id final
+           |For Id Asigna  expMat To expMat Next Id final;
 
 dostm            ::= Do While expLog final statementlist Loop final
                     |Do expLog final statementlist Loop While final
@@ -443,21 +445,46 @@ expLog     ::= condicion
             |ParIzq expLog ParDer And expLog
             ;
 
-expMat  ::= Id Asigna exp final
+expMat  ::= Id:id Asigna exp:e {:
+            if(ExisteType(getTipo(id.toString(),ambitoactual,idleft+1,idright+1),"variant")){
+                Simbolos sim  = new Simbolos();
+                String f = id.toString() +","+ ambitoactual;
+                sim = (Simbolos)tabla.get(f);
+                System.out.println("                "+ f);
+                sim.setTipos(e.toString());
+                System.out.println("           "+sim.getTipos()); }
+            if(ExisteType(getTipo(id.toString(),ambitoactual,idleft+1,idright+1),e.toString())){
+                /*generar codigo*/
+            }else{
+                E2(idleft+1,idright+1,"No se Puede Asiganr dos tipos diferntes");
+            }:} final
             |Id Asigna TipoBoolean final
             |Id Asigna conca final
             |Id Punto Id Asigna exp final
             |Id Punto Id Asigna TipoBoolean final
             |Id Punto Id Asigna conca final;
 
-exp     ::= Entero
-            |Id
-            |Id Punto Id
-            |Id ParIzq listparam ParDer
-            |exp Suma exp
-            |exp Resta exp
-            |exp Mult exp
-            |exp Div exp
-            |exp Potencia exp
-            |ParIzq exp ParDer
+exp     ::= Entero {:RESULT = "integer";:}
+            |Id:id {: RESULT = getTipo(id.toString(),ambitoactual,idleft+1,idright+1);:}
+            |Id:id Punto Id:id1 {:Boolean encontro=false;String tipo="",type="";for(int i = 0 ; i<types.size();i++){
+                                
+                               if(ExisteType(types.get(i).id.toString(),getTipo(id.toString(),ambitoactual,idleft+1,idright+1))){
+                                type = "Instancia del Type "+types.get(i).id.toString().toUpperCase();
+                                for(int j =0;j<types.get(i).listaDeInstancias.size();j++){
+                                    System.out.println(types.get(i).listaDeInstancias.get(j).toString()+"      "+id1.toString());
+                                    if(ExisteType(types.get(i).listaDeInstancias.get(j).toString(),id1.toString())){
+                                        tipo = types.get(i).tipoDeInstancias.get(j).toString();
+                                        encontro = true;
+                                   }
+                                }
+                                }else{E2(idleft+1,idright+1,"Type no Declarado: '"+id.toString().toUpperCase()+"'");}}
+                                if(encontro){RESULT = tipo;System.out.println(tipo);}else{E2(id1left+1,id1right+1,type + " no declarada: "+id1.toString().toUpperCase());}
+:}
+            |Id ParIzq listparam ParDer {:RESULT="";:}
+            |exp:e1 Suma exp:e2         {:if(e1.toString().equals(e2.toString())){RESULT=e1.toString();}else{E2(e1left+1,e1right+1,"No se Puede Asiganr dos tipos diferntes");}:}
+            |exp:e1 Resta exp:e2        {:if(e1.toString().equals(e2.toString())){RESULT=e1.toString();}else{E2(e1left+1,e1right+1,"No se Puede Asiganr dos tipos diferntes");}:}
+            |exp:e1 Mult exp:e2         {:if(e1.toString().equals(e2.toString())){RESULT=e1.toString();}else{E2(e1left+1,e1right+1,"No se Puede Asiganr dos tipos diferntes");}:}
+            |exp:e1 Div exp:e2          {:if(e1.toString().equals(e2.toString())){RESULT=e1.toString();}else{E2(e1left+1,e1right+1,"No se Puede Asiganr dos tipos diferntes");}:}
+            |exp:e1 Potencia exp:e2     {:if(e1.toString().equals(e2.toString())){RESULT=e1.toString();}else{E2(e1left+1,e1right+1,"No se Puede Asiganr dos tipos diferntes");}:}
+            |ParIzq exp:e ParDer        {:RESULT = e.toString();:}
             ;
